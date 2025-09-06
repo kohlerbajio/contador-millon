@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Contador</title>
+ <style>
+    body {
+      background-image: url(KohlerBajio.jpg); /* Cambia 'ruta-de-tu-imagen.jpg' por la ubicación de tu imagen */
+      background-size: cover; /* Ajusta la imagen para que cubra toda la pantalla */
+      background-repeat: no-repeat; /* Evita que la imagen se repita */
+      background-position: center; /* Centra la imagen */
+    }
+  </style>
+<style>
+    body {
+      font-family: 'Courier new', monospace;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding-top: 50px;
+    }
+    .counter {
+      font-size: 250px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .digit {
+      position: relative;
+      width: 150px;
+      height: 250px;
+      perspective: 1000px;
+    }
+    .digit .front, .digit .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      line-height: 250px;
+      font-size: 250px;
+      background: #000;
+      border: 2px solid #000;
+      border-radius: 10px;
+      backface-visibility: hidden;
+      transition: transform 0.6s ease-in-out;
+    }
+    .digit .back {
+      transform: rotateX(180deg);
+    }
+    .digit.flip .front {
+      transform: rotateX(-180deg);
+    }
+    .digit.flip .back {
+      transform: rotateX(0deg);
+    }
+    #countdown {
+      font-size: 32px;
+      margin-top: 20px;
+      color: #333;
+    }
+  
+body {
+    background-color: #111;
+    color: #DAA520;
+}
+.flip-digit {
+    background-color: #222;
+    color: #DAA520;
+    border: 1px solid #444;
+}
+
+.flip-clock-wrapper ul li a div {
+    background: none !important;
+    color: #DAA520 !important;
+}
+.highlight {
+	font-size: 50px;
+      background-color: black; /* Color de fondo */
+      padding: 0; /* Sin espacio adicional */
+    }
+</style>
+</head>
+<body>
+<h1 style="font-size: 70px;" style="color: #DAA520;">Piezas Empacadas</h1>
+<div class="counter" id="counter"></div>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDatfq2otEvS8ujAAHgrpPU655j6SscP2k",
+      authDomain: "contador-de-piezas-a-un-millon.firebaseapp.com",
+      databaseURL: "https://contador-de-piezas-a-un-millon-default-rtdb.firebaseio.com",
+      projectId: "contador-de-piezas-a-un-millon",
+      storageBucket: "contador-de-piezas-a-un-millon.appspot.com",
+      messagingSenderId: "986219304486",
+      appId: "1:986219304486:web:5621bf3596e3523f4738e7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const counterRef = db.ref("contador");
+    const lastUpdateRef = db.ref("lastUpdate");
+
+    let currentValue = 964200;
+    let countdown = 39;
+
+    function createDigitElement(value) {
+      const digit = document.createElement("div");
+      digit.className = "digit";
+      digit.innerHTML = `
+        <div class="front">${value}</div>
+        <div class="back">${value}</div>
+      `;
+      return digit;
+    }
+
+    function updateCounterDisplay(newValue) {
+      const container = document.getElementById("counter");
+      const newDigits = String(newValue).padStart(7, '0').split('');
+      const oldDigits = container.querySelectorAll(".digit");
+
+      newDigits.forEach((num, i) => {
+        if (oldDigits[i]) {
+          const front = oldDigits[i].querySelector(".front");
+          const back = oldDigits[i].querySelector(".back");
+          if (front.textContent !== num) {
+            back.textContent = num;
+            oldDigits[i].classList.add("flip");
+            setTimeout(() => {
+              front.textContent = num;
+              oldDigits[i].classList.remove("flip");
+            }, 600);
+          }
+        } else {
+          container.appendChild(createDigitElement(num));
+        }
+      });
+
+      while (oldDigits.length > newDigits.length) {
+        container.removeChild(container.lastChild);
+      }
+    }
+
+    function updateCountdownDisplay() {
+      document.getElementById("countdown").textContent = `Próximo incremento en: ${countdown}`;
+    }
+
+    counterRef.on("value", snapshot => {
+      const val = snapshot.val();
+      if (val !== null) {
+        currentValue = val;
+        updateCounterDisplay(currentValue);
+      }
+    });
+
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        lastUpdateRef.once("value").then(snapshot => {
+          const lastUpdate = snapshot.val() || 0;
+          const now = Date.now();
+          if (now - lastUpdate >= 19500) {
+            const newValue = currentValue + 1;
+            counterRef.set(newValue);
+            lastUpdateRef.set(now);
+          }
+        });
+        countdown = 39;
+      }
+      updateCountdownDisplay();
+    }, 1000);
+  </script>
+  <h1 style="font-size: 70px;" style="color: #DAA520;">KOHLER BAJÍO</h1>
+  </br>
+  </br>
+  </br>  
+  <h1 style="color: #DAA520; text-align: Center; font-size: 40px;"><Span class="highlight">¡VAMOS POR EL MILLÓN!</Span></h1>
+</body>
+</html>
